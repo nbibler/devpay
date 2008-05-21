@@ -1,0 +1,11 @@
+== Devpay
+
+This Devpay plugin is designed to ease integration with 
+{Amazon's DevPay}[http://www.amazon.com/DevPay-AWS-Service-Pricing/b/ref=sc_fe_l_3?ie=UTF8&node=342429011] 
+services, specifically for web-hosted DevPay products.
+
+DevPay products for the desktop will very likely not find this plugin terribly 
+useful.  Sorry.
+
+
+Copyright (c) 2008 Nathaniel E. Bibler, released under the MIT license

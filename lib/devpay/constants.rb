@@ -15,11 +15,12 @@ module Devpay
     #
     OFFER_CODE_LENGTH     = 8
     
-    PRODUCT_CODE_FORMAT   = /\A[\w]{#{Constants::PRODUCT_CODE_LENGTH}}\Z/
+    
+    ACTIVATION_KEY_FORMAT = /\A[\w]+\Z/
     OFFER_CODE_FORMAT     = /\A[\w]{#{Constants::OFFER_CODE_LENGTH}}\Z/
+    PRODUCT_CODE_FORMAT   = /\A[\w]{#{Constants::PRODUCT_CODE_LENGTH}}\Z/
     PRODUCT_TOKEN_FORMAT  = /\A\{ProductToken\}.+\Z/
     USER_TOKEN_FORMAT     = /\A\{UserToken\}.+\Z/
-    ACTIVATION_KEY_FORMAT = /\A[\w]+\Z/
     
     ##
     # The basic Amazon DevPay purchase url (without offeringCode)

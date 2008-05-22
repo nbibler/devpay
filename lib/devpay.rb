@@ -26,6 +26,10 @@ module Devpay
   # query string parameters containing the Activation Key and purchased 
   # Product Code.
   #
+  # ===== Parameters
+  #
+  # offer_code:: Can either be a String or an object which responds to :offer_code.  This value was given to you buy Amazon at DevPay product registration.
+  #
   # ===== Exceptions
   #
   # Devpay::Errors::InvalidOfferCode:: If the given or retrieved offer code is not valid.
@@ -39,10 +43,14 @@ module Devpay
   ##
   # Contacts the Amazon License Service to activate the given 
   # +activation_key+ for the given +product_token+ and returns a User Token
-  # for the customer.  
+  # and Persistent Identifier for the customer.
   #
-  # <b>The User Token should be permenantly stored and associated with
-  # your customer's records.</b> It is your responsibility to design your
+  #    user_token, pid = Devpay.activate!(activation_key, product_token)
+  #
+  # ==== Usage Notes
+  #
+  # The User Token should be permenantly stored and associated with
+  # your customer's records. It is your responsibility to design your
   # site so that it can recognize each customer an retrieve the user token
   # associated with that customer.
   #
@@ -50,19 +58,15 @@ module Devpay
   #
   #     "If the user token is ever missing, the product must get a new one." -- Amazon
   #
-  # ===== Parameters
-  #
-  # The +activation_key+ should have been received either directly from 
-  # Amazon or have been provided to you by your customer.  The +product_token+
-  # was provided to you when you registered your DevPay product.
-  #
-  # The +product_token+ parameter can either be a +String+ containing the 
-  # token, or an object which responds to +product_token+.
-  #
   # ===== Hosted DevPay products only
   #
   # This method will only activate 'hosted' DevPay products.  This should not 
   # be used for 'desktop' DevPay products.
+  #
+  # ===== Parameters
+  #
+  # activation_key:: A String received either directly from an Amazon query-string redirection or provided by your customer.
+  # product_token:: A String or object which responds to :product_token.  This value was provided to you when you registered your DevPay product.
   #
   # ===== Exceptions
   #

@@ -18,6 +18,6 @@ require 'devpay'
 RAILS_ROOT  = '.'     unless defined? RAILS_ROOT
 RAILS_ENV   = 'test'  unless defined? RAILS_ENV
 
-require 'schema'
-require 'models'
-require 'helpers'
+require File.dirname(__FILE__) + '/schema'
+require File.dirname(__FILE__) + '/models'
+require File.dirname(__FILE__) + '/helpers'

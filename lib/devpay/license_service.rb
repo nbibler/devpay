@@ -95,6 +95,8 @@ module Devpay
     # 
     #
     def activate_hosted_product(activation_key, product_token, access_key_id, secret_access_key)
+      check_credentials access_key_id, secret_access_key
+      
       arguments = {
         'Action'        => 'ActivateHostedProduct',
         'ActivationKey' => activation_key,
@@ -117,6 +119,8 @@ module Devpay
     # Devpay::Errors::LicenseServiceError:: General error form, more specific errors will be raised that inherit from it
     #
     def get_active_subscriptions(pid, access_key_id, secret_access_key)
+      check_credentials access_key_id, secret_access_key
+
       arguments = {
         'Action'                => 'GetActiveSubscriptionsByPid',
         'PersistentIdentifier'  => pid
@@ -134,6 +138,8 @@ module Devpay
     # Devpay::Errors::LicenseServiceError:: General error form, more specific errors will be raised that inherit from it
     #
     def verify_product_subscription(pid, product_code, access_key_id, secret_access_key)
+      check_credentials access_key_id, secret_access_key
+
       arguments = {
         'Action'                => 'VerifyProductSubscriptionByPid',
         'PersistentIdentifier'  => pid,
@@ -178,7 +184,7 @@ module Devpay
       arguments_for_encryption.collect! { |pair| pair.first.to_s + pair.last.to_s }
 
       arguments['Signature']          = Base64.encode64(
-        OpenSSL::HMAC.hexdigest(
+        OpenSSL::HMAC.digest(
           OpenSSL::Digest::Digest.new('sha1'),
           secret_access_key,
           arguments_for_encryption.join('')
@@ -251,6 +257,11 @@ module Devpay
           ) :
           raise_error(response.class.to_s, 'No valid response returned')
       end
+    end
+    
+    def check_credentials(access_key_id, secret_access_key)
+      access_key_id     || raise(Errors::LicenseService::MissingCredentials, "Access key id not provided", caller)
+      secret_access_key || raise(Errors::LicenseService::MissingCredentials, "Secret access key not provided", caller)
     end
     
     ##

@@ -7,8 +7,16 @@ module Devpay
       # Custom error added for timeouts
       class TimeoutError < Devpay::Errors::LicenseServiceError; end
       
+      # The credentials provided were not recognized.
+      class InvalidClientTokenId < Devpay::Errors::LicenseServiceError; end
+
       # Custom error added for offer code validation
       class InvalidOfferCode < Devpay::Errors::LicenseServiceError; end
+      
+      # All requests to the License Service were 503 Service Unavailable
+      class ServiceUnavailable < Devpay::Errors::LicenseServiceError; end
+
+      
       
       
       

@@ -1,6 +1,7 @@
 require File.dirname(__FILE__) + '/test_helper'
+require 'net/http'
 
-class Devpay::LicenseServiceTest < Test::Unit::TestCase
+class LicenseServiceTest < Test::Unit::TestCase
   include LicenseServiceTestHelper
   
   context "The License Service" do
@@ -10,7 +11,8 @@ class Devpay::LicenseServiceTest < Test::Unit::TestCase
     end
     
     should "raise an UserNotSubscribed error" do
-      Net::HTTP.any_instance.stubs(:request).returns(unsuccessful_http_response('UserNotSubscribed'))
+      Net::HTTP.any_instance.expects(:get2).returns(mock_http_response('Net::HTTPForbidden', '403', 'Forbidden') { erred_response_body('UserNotSubscribed') })
+      
       assert_raise(Devpay::Errors::LicenseService::UserNotSubscribed) do
         @ls.activate_hosted_product(
           TEST_ACTIVATION_KEY,
@@ -24,7 +26,8 @@ class Devpay::LicenseServiceTest < Test::Unit::TestCase
     context "when activating a hosted product" do
       
       setup do
-        @ls.stubs(:make_request).returns(activate_hosted_product_success)
+        Net::HTTP.any_instance.stubs(:get2).
+          returns(mock_http_response { activate_hosted_product_response_body })
       end
       
       should "return an ActivationResponse" do
@@ -65,7 +68,8 @@ class Devpay::LicenseServiceTest < Test::Unit::TestCase
     context "when getting active subscriptions" do
       
       setup do
-        @ls.stubs(:make_request).returns(get_active_subscriptions_success)
+        Net::HTTP.any_instance.stubs(:get2).
+          returns(mock_http_response { get_active_subscriptions_response_body })
       end
       
       should "return an Array of Strings" do
@@ -78,7 +82,7 @@ class Devpay::LicenseServiceTest < Test::Unit::TestCase
         assert results.all? { |a| a.kind_of?(String) }
       end
       
-      should "contain expected number of codes" do
+      should "contain the correct number of product codes" do
         results = @ls.get_active_subscriptions(
           TEST_PID,
           TEST_ACCESS_KEY_ID,
@@ -87,7 +91,7 @@ class Devpay::LicenseServiceTest < Test::Unit::TestCase
         assert_equal 2, results.size
       end
       
-      should "contain expected codes" do
+      should "contain the expected product codes" do
         results = @ls.get_active_subscriptions(
           TEST_PID,
           TEST_ACCESS_KEY_ID,
@@ -102,42 +106,124 @@ class Devpay::LicenseServiceTest < Test::Unit::TestCase
     
     context "when verifying a product subscription" do
       
-      setup do
-        @ls.stubs(:make_request).returns(verify_product_subscription_response)
+      context "an active subscription" do
+        
+        setup do
+          Net::HTTP.any_instance.stubs(:get2).
+            returns(mock_http_response { verify_product_subscription_response_body(true) })
+        end
+        
+        should "return true" do
+          assert @ls.verify_product_subscription(
+            TEST_PID,
+            TEST_PRODUCT_CODE,
+            TEST_ACCESS_KEY_ID,
+            TEST_SECRET_ACCESS_KEY
+          )
+        end
       end
       
-      should "be true" do
-        assert @ls.verify_product_subscription(
-          TEST_PID,
-          TEST_PRODUCT_CODE,
-          TEST_ACCESS_KEY_ID,
-          TEST_SECRET_ACCESS_KEY
-        )
-      end
-      
-      should "be false" do
-        @ls.stubs(:make_request).returns(verify_product_subscription_response('false'))
-        assert !@ls.verify_product_subscription(
-          TEST_PID,
-          TEST_PRODUCT_CODE,
-          TEST_ACCESS_KEY_ID,
-          TEST_SECRET_ACCESS_KEY
-        )
+      context "a non-active subscription" do
+        
+        setup do
+          Net::HTTP.any_instance.stubs(:get2).
+            returns(mock_http_response { verify_product_subscription_response_body(false) })
+        end
+        
+        should "return false" do
+          assert !@ls.verify_product_subscription(
+            TEST_PID,
+            TEST_PRODUCT_CODE,
+            TEST_ACCESS_KEY_ID,
+            TEST_SECRET_ACCESS_KEY
+          )
+        end
       end
       
     end
     
-    context "when Net::HTTP times out" do
+    context "when the connection times out" do
       
       setup do
-        Net::HTTP.any_instance.stubs(:start).
-          with(any_parameters).
+        Net::HTTP.any_instance.stubs(:get2).
           raises(Timeout::Error, 'Timed out')
       end
       
       should "raise a LicenseService::TimeoutError" do
         assert_raise(Devpay::Errors::LicenseService::TimeoutError) do
           @ls.activate_hosted_product(TEST_ACTIVATION_KEY, TEST_PRODUCT_TOKEN, TEST_ACCESS_KEY_ID, TEST_SECRET_ACCESS_KEY)
+        end
+      end
+      
+    end
+    
+    context "when Service Unavailable (HTTP 503)" do
+      
+      setup do
+        Net::HTTP.any_instance.stubs(:timeout).returns(0.01)
+      end
+      
+      should "retry the request" do
+        Net::HTTP.any_instance.expects(:get2).
+          times(Devpay::LicenseService::RETRIES_FOR_503).
+          returns(mock_http_response('Net::HTTPServiceUnavailable', '503', 'Service Unavailable') { erred_response_body('ServiceUnavailable', 'Service Unavailable') })
+        
+        assert_raise(Devpay::Errors::LicenseService::ServiceUnavailable) do
+          @ls.activate_hosted_product(
+            TEST_ACTIVATION_KEY, 
+            TEST_PRODUCT_TOKEN, 
+            TEST_ACCESS_KEY_ID, 
+            TEST_SECRET_ACCESS_KEY
+          )
+        end
+      end
+
+      context "and continues to be unavailable" do
+        should "raise a ServiceUnavailable error" do
+          Net::HTTP.any_instance.expects(:get2).
+            at_least_once.
+            returns(mock_http_response('Net::HTTPServiceUnavailable', '503', 'Service Unavailable') { erred_response_body('ServiceUnavailable', 'Service Unavailable') })
+        
+          assert_raise(Devpay::Errors::LicenseService::ServiceUnavailable) do
+            @ls.activate_hosted_product(
+              TEST_ACTIVATION_KEY, 
+              TEST_PRODUCT_TOKEN, 
+              TEST_ACCESS_KEY_ID, 
+              TEST_SECRET_ACCESS_KEY
+            )
+          end
+        end
+      end
+
+      context "and the service becomes available" do
+        
+        setup do
+          Net::HTTP.any_instance.expects(:get2).
+            times(2).
+            returns(
+              mock_http_response('Net::HTTPServiceUnavailable', '503', 'Service Unavailable') { erred_response_body('ServiceUnavailable', 'Service Unavailable') },
+              mock_http_response { activate_hosted_product_response_body }
+            )
+        end
+        
+        should "not raise an error" do
+          assert_nothing_raised(Exception) do
+            @ls.activate_hosted_product(
+              TEST_ACTIVATION_KEY, 
+              TEST_PRODUCT_TOKEN, 
+              TEST_ACCESS_KEY_ID, 
+              TEST_SECRET_ACCESS_KEY
+            )
+          end
+        end
+        
+        should "continue processing as normal" do
+          assert_kind_of Devpay::ActivationResponse, @ls.activate_hosted_product(
+            TEST_ACTIVATION_KEY, 
+            TEST_PRODUCT_TOKEN, 
+            TEST_ACCESS_KEY_ID, 
+            TEST_SECRET_ACCESS_KEY
+          )
         end
       end
       

@@ -1,8 +1,8 @@
-require 'base64'
-require 'cgi'
 require 'net/https'
 require 'openssl'
 require 'digest/sha1'
+require 'base64'
+require 'cgi'
 require 'rexml/document'
 require 'time'
 
@@ -52,6 +52,9 @@ module Devpay
     
     # Number of retries to perform if 503 (service unavailable).  Amazon may throttle the LS as necessary, returning 503.
     RETRIES_FOR_503   = 3
+    
+    # Number of seconds to delay between retries.
+    RETRY_DELAY       = 0.5
     
     # Defaults to HOST value
     attr_accessor :host
@@ -192,36 +195,63 @@ module Devpay
     # Devpay::Errors::LicenseServiceError:: General form of other errors raised by the License Service
     # 
     def make_request(query_string)
+      retry_count       = 1
+      response          = nil
+
       http              = Net::HTTP.new(@host, @port)
-      http.verify_mode  = OpenSSL::SSL::VERIFY_NONE
       http.use_ssl      = true
-      http.open_timeout = @timeout
-      http.read_timeout = @timeout
+      http.verify_mode  = OpenSSL::SSL::VERIFY_NONE
+      http.open_timeout = timeout
+      http.read_timeout = http.open_timeout
       
-      http.start do |connection|
-        response        = http.request(Net::HTTP::Get.new(query_string))
-        response_doc    = REXML::Document.new(response.body)
-        
-        unless response.kind_of? Net::HTTPSuccess
-          raise_error!(
-            extract_text(response_doc, "//Code"),
-            extract_text(response_doc, "//Message")
-          )
+      begin
+        response        = http.get2(query_string)
+        if response.kind_of?(Net::HTTPServiceUnavailable) && retry_count < @retries_for_503
+          retry_count += 1
+          sleep RETRY_DELAY
+          raise(Errors::LicenseService::ServiceUnavailable)
         end
+      rescue Timeout::Error => e
+        raise(Errors::LicenseService::TimeoutError, e.message, e.backtrace)
+      rescue Errors::LicenseService::ServiceUnavailable => e
+        retry
       end
       
-    rescue Timeout::Error => e
-      raise(Errors::LicenseService::TimeoutError, e.message, e.backtrace)
+      handle_response response
+    end
+    
+    
+    ##
+    # Handles / routes an HTTPResponse, usually generated in make_request.
+    #
+    def handle_response(response)
+      response_doc  = begin
+                        REXML::Document.new(response.body)
+                      rescue REXML::ParseException => e
+                        nil
+                      end
+                      
+      if response.kind_of? Net::HTTPSuccess
+        return response_doc
+      else
+        response_doc ?
+          raise_error(
+            extract_text(response_doc, "//Code"),
+            extract_text(response_doc, "//Message")
+          ) :
+          raise_error(response.class.to_s, 'No valid response returned')
+      end
     end
     
     ##
     # Wraps the License Service response errors by raising an actual Ruby
     # error to later catch.
     #
-    def raise_error!(name, message)
+    def raise_error(name, message = nil)
+      name = name.split('::').last
       Errors::LicenseService.const_defined?(name.to_sym) ?
-        raise(Errors::LicenseService.const_get(name.to_sym), message) :
-        raise(Errors::LicenseServiceError, "Unrecognized Error: #{name}: #{message}")
+        raise(Errors::LicenseService.const_get(name.to_sym), message, caller) :
+        raise(Errors::LicenseServiceError, "Error: #{name}: #{message}", caller)
     end
     
   end

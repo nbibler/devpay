@@ -1,4 +1,6 @@
 require 'rexml/document'
+require 'net/https'
+require 'yaml'
 
 TEST_PRODUCT_TOKEN      = "{ProductToken}b#q.079EUWQu;hsG2b0O3im<Ue=N9gum3UnLXNrrvd/ii0f5/y-MfnM:i7U+cWpOlxHxtWWa7KiAP$8U9+81ec3m89p4qvbY%h-IL_nJk36b8LHZly~TG3oZMhVMa'~HwAw3m$JO`bCP03f85sj4shHD2NANSZOyNWCQ5n>c#VCP[lF<Ce2az4Qh7m8-KI4d8pR.05]H7;OZYN{Jg{o=2ja51CS4EzlMEl77Zmh3EySvx4>G3CKbsRQ&gQ-T4gV4uk1!luzndC8N$2.w!M0UsqViczlPyfs6c5P8&Oacj6@Ibderfklpoiu="
 TEST_PRODUCT_CODE       = "774F4FF8"
@@ -24,92 +26,48 @@ module LicenseServiceTestHelper #:nodoc:
   
   private
   
-  def unsuccessful_http_response(code = 'ExpiredActivationKey', message = 'The activation key has expired')
-    response = mock('HTTP Response')
-    response.stubs(:body).returns(erred_request_body(code, message))
-    response
-  end
-  
-  def activate_hosted_product_success
-    REXML::Document.new(<<-XML
-      <ActivateHostedProductResponse>
-        <ActivateHostedProductResult>
-          <UserToken> 
-            {UserToken}thisismytestusertokenthisismytestusertoken
-          </UserToken>
-          <PersistentIdentifier> 
-            TESTPERSISTENTIDENTIFIER 
-          </PersistentIdentifier>
-          <ResponseMetadata>
-            <RequestId> 
-              cb919c0a-9bce-4afe-9b48-9bdf2412bb67 
-            </RequestId>
-          </ResponseMetadata>
-        </ActivateHostedProductResult>
-      </ActivateHostedProductResponse>
-      XML
+  def mock_http_response(response_type = 'Net::HTTPSuccess', code = '200', message = 'OK', &block)
+    YAML::load(<<-YAML
+--- !ruby/object:#{response_type} 
+  body: |-
+    #{yield}
+  body_exist: true
+  code: #{code}
+  header: 
+    date: 
+    - Fri, 23 May 2008 16:08:33 GMT
+    server: 
+    - AWSLicenseService
+    transfer-encoding: 
+    - chunked
+  http_version: "1.1"
+  message: #{message}
+  read: true
+  socket: 
+    YAML
     )
   end
-  
-  def get_active_subscriptions_success
-    REXML::Document.new(<<-XML
-      <GetActiveSubscriptionsByPidResponse>
-        <GetActiveSubscriptionsByPidResult>
-          <ProductCode> 
-            6883959E 
-          </ProductCode>
-          <ProductCode> 
-            774F4FF8 
-          </ProductCode>
-        </GetActiveSubscriptionsByPidResult>
-        <ResponseMetadata>
-          <RequestId> 
-            cb919c0a-9bce-4afe-9b48-9bdf2412bb67 
-          </RequestId>
-        </ResponseMetadata>
-      </GetActiveSubscriptionsByPidResponse>
-    XML
-    )
+
+  def erred_response_body(code = 'UnsetErrorCode', message = 'Unset error message')
+    %(<?xml version="1.0"?>
+    <ErrorResponse xmlns="http://ls.amazonaws.com/doc/2007-06-05/"><Error><Type>Sender</Type><Code>#{code}</Code><Message>#{message}</Message><Detail/></Error><RequestId>c75dbc1c-af20-409a-95de-650bba351890</RequestId></ErrorResponse>)
+  end
+
+  def successful_response_body(&block)
+    %(<?xml version="1.0"?>
+    #{yield})
   end
   
-  def verify_product_subscription_response(result = 'true')
-    REXML::Document.new(<<-XML
-      <VerifyProductSubscriptionByPidResponse>
-        <VerifyProductSubscriptionByPidResult>
-          <Subscribed> 
-            #{result}
-          </Subscribed>
-        </VerifyProductSubscriptionByPidResult>
-        <ResponseMetadata>
-          <RequestId> 
-            cb919c0a-9bce-4afe-9b48-9bdf2412bb67 
-          </RequestId>
-        </ResponseMetadata>
-      </VerifyProductSubscriptionByPidResponse>
-    XML
-    )
+  def activate_hosted_product_response_body
+    successful_response_body { %(<ActivateHostedProductResponse><ActivateHostedProductResult><UserToken> {UserToken}thisismytestusertokenthisismytestusertoken</UserToken><PersistentIdentifier> TESTPERSISTENTIDENTIFIER </PersistentIdentifier><ResponseMetadata><RequestId> cb919c0a-9bce-4afe-9b48-9bdf2412bb67 </RequestId></ResponseMetadata></ActivateHostedProductResult></ActivateHostedProductResponse>) }
   end
   
-  def erred_request_body(code, message)
-    <<-XML
-      <ErrorResponse xmlns="http://ls.amazonaws.com/doc/2007-06-05/">
-        <Error>
-          <Type> 
-            Sender 
-          </Type>
-          <Code> 
-            #{code} 
-          </Code>
-          <Message> 
-            #{message} 
-          </Message>
-          <Detail/>
-        </Error>
-        <RequestId> 
-          c75dbc1c-af20-409a-95de-650bba351890 
-        </RequestId>
-      </ErrorResponse>
-    XML
+  def get_active_subscriptions_response_body
+    successful_response_body { %(<GetActiveSubscriptionsByPidResponse><GetActiveSubscriptionsByPidResult><ProductCode> 6883959E </ProductCode><ProductCode> 774F4FF8 </ProductCode></GetActiveSubscriptionsByPidResult><ResponseMetadata><RequestId> cb919c0a-9bce-4afe-9b48-9bdf2412bb67 </RequestId></ResponseMetadata></GetActiveSubscriptionsByPidResponse>) }
+  end
+  
+  def verify_product_subscription_response_body(result = true)
+    successful_response_body { %(<VerifyProductSubscriptionByPidResponse><VerifyProductSubscriptionByPidResult><Subscribed>#{result.to_s}</Subscribed></VerifyProductSubscriptionByPidResult><ResponseMetadata><RequestId> cb919c0a-9bce-4afe-9b48-9bdf2412bb67 </RequestId></ResponseMetadata></VerifyProductSubscriptionByPidResponse>) }
   end
   
 end

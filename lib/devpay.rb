@@ -147,7 +147,7 @@ module Devpay
   # Returns a new instance of an Amazon License Service object.
   #
   def self.license_service
-    DevPay::LicenseService.new
+    Devpay::LicenseService.new
   end
   
   def self.valid_offer_code?(code) #:nodoc:

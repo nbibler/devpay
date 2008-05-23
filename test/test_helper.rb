@@ -7,11 +7,11 @@ require 'test/unit'
 require 'mocha'
 require 'shoulda'
 
-# begin
-#   require 'redgreen'
-# rescue LoadError
-#   nil
-# end
+begin
+  require 'redgreen'
+rescue LoadError
+  nil
+end
 
 require 'devpay'
 

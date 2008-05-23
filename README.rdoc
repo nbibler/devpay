@@ -4,10 +4,112 @@ This Devpay plugin is designed to ease integration with
 {Amazon's DevPay}[http://www.amazon.com/DevPay-AWS-Service-Pricing/b/ref=sc_fe_l_3?ie=UTF8&node=342429011] 
 services, specifically for web-hosted DevPay products.
 
-DevPay products for the desktop will very likely not find this plugin terribly 
-useful.  Sorry.
+Note: DevPay products for the desktop will very likely not find this plugin 
+terribly useful.  Sorry.
 
-=== This plugin is not yet ready for production use.
+=== The DevPay Process
 
+DevPay is designed to be a very hands-off payment processing and subscription
+management system.  It allows developers to nearly ignore the process 
+altogether.  The pieces which are of concern, however, are as follows:
+
+1. Customer signs up for your product using a link you provide (see Devpay.purchase_url_for),
+2. The customer goes about signing up for Amazon services, on Amazon's websites,
+3. The customer successfully signs up for your product and is redirected to a URL you'd previously provided during product registration,
+4. The redirection contains an activation key and product code which must be activated (see Devpay.activate!),
+5. Following activation, you'll receive a User Token (which must be stored) and Persistent Identifier,
+6. The customer happily uses your hosted DevPay product,
+7. ...
+8. <b>Profit!</b>
+
+=== Things You'll Need
+
+==== Amazon Web Service Account
+
+First, you'll need an {Amazon Web Services}[http://aws.amazon.com/] account. 
+Once you've got that, you'll have to provide the following to this plugin:
+
+Access Key Id:: Provided to you by Amazon when you signed up for Amazon Web Services
+Secret Access Key:: Provided to you by Amazon when you signed up for Amazon Web Services
+
+These can be set by telling the plugin to use the same credentials for all
+requests (i.e. Devpay.access_key_id = 'ABCD1234'), or each request has 
+optional parameters to allow for per-request credentials to be used.
+
+==== Register Your DevPay Products
+
+You will have to 
+{register your DevPay products}[http://aws.amazon.com/devpayactivity]
+once you have an AWS account.  At the moment, each product must be approved
+prior to use by an AWS employee, this may take up to a few days.
+
+Once you've registered your products, you'll need to record the following
+for each:
+
+Product Code:: An 8-digit alphanumeric code, given to you by Amazon.
+Product Token:: A 300+ digit hash that begins with {ProductToken}, given to you by Amazon.
+Offer Code:: An 8-digit alphanumeric code.  You'll want to extract this from the purchase url Amazon provides to you (i.e. https://aws-portal.amazon.com/gp/aws/user/subscription/index.html?offeringCode=ABCD1234).
+
+=== Examples
+
+Lets say you're loading up your credentials into a global constant hash 
+called AWS_CREDS, and you've stored your product identifiers into an 
+ActiveRecord 'Product' model as product_code, product_token, and offer_code, 
+respectively.
+
+==== Product URLs
+
+If you've got an object which responds to :offer_code, you can:
+
+    <%= link_to 'Buy Now', Devpay.purchase_url_for(product) %>
+
+Otherwise, you can pass the offer code directly:
+
+    <%= link_to 'Buy Now', Devpay.purchase_url_for('ABCD1234') %>
+
+==== Activation
+
+Once the user comes back to your site, you'll get an Activation Key and a 
+Product Code.  If you're unlucky and the redirection failed, you may have to
+query your customer for these values, directly (probably a pull-down for the 
+products would be better than asking for that one).
+
+In your DevPayResponseController, you could:
+
+    # This URL was set in your DevPay product as the return URL (i.e. http://www.example.com/devpay_response/returned)
+    def returned
+      activation_response       = Devpay.activate!(params[:activation_key], params[:product_code])
+      PaidUser.create!({
+        ...
+        :user_token             => activation_response.user_token,
+        :persistent_identifier  => activation_response.persistent_identifier,
+        ...
+      })
+    end
+
+==== Query for Active Product Codes
+
+You could request a list of all active products which a customer is utilizing
+by your DevPay services:
+
+    Devpay.find_all_product_codes_for(paid_user)      #=> [ "ABCD1234", "ABCD1235" ]
+    
+In the above example, we're assuming paid_user responds with the correct 
+persistent identifier when :persistent_identifier is called against it.
+
+==== Subscription State
+
+As Amazon does not alert you to changes in DevPay subscription states (like
+PayPal's Instant Payment Notification service, for example), it is up to you
+to periodically determine the state of the customer's subscription.  This can
+be done with the following:
+
+    Devpay.active?(paid_user, product_paid_for)       #=> true
+    Devpay.active?(paid_user, product_not_paid_for)   #=> false
+
+In the above example, we're assuming paid_user responds with the correct 
+persistent identifier when :persistent_identifier is called against it.
+Further, we're also assuming that product is an object which responds to 
+:product_code and returns a valid DevPay product code.
 
 Copyright (c) 2008 Nathaniel E. Bibler, released under the MIT license

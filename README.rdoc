@@ -118,6 +118,6 @@ Further, we're also assuming that product is an object which responds to
 Copyright (c) 2008 {Nathaniel E. Bibler}[http://www.nathanielbibler.com], 
 released under the MIT license.
 
-Thanks to david@aws and Amazon:http://www.amazon.com for providing 
+Thanks to david@aws and {Amazon.com}[http://www.amazon.com] for providing 
 {basic Ruby samples}[http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1100]
 for interaction with the Amazon License Service.

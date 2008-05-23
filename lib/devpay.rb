@@ -1,6 +1,8 @@
-require 'devpay/errors'
+require 'devpay/error'
+require 'devpay/errors/errors'
+require 'devpay/errors/license_service/errors'
 require 'devpay/constants'
-require File.dirname(__FILE__) + '/../vendor/ls'
+require 'devpay/license_service'
 
 ##
 # Manages interactions with the Amazon DevPay system.
@@ -32,11 +34,11 @@ module Devpay
   #
   # ===== Exceptions
   #
-  # Devpay::Errors::InvalidOfferCode:: If the given or retrieved offer code is not valid.
+  # Devpay::Errors::LicenseServiceError:: Generic error occurring within the License Service
   #
   def self.purchase_url_for(offer_code)
     offer_code = offer_code.offer_code if offer_code.respond_to?(:offer_code)
-    raise(Errors::InvalidOfferCode, "Invalid offer code given: #{offer_code.inspect}") unless valid_offer_code?(offer_code)
+    raise(Errors::LicenseService::InvalidOfferCode, "Invalid offer code given: #{offer_code.inspect}") unless valid_offer_code?(offer_code)
     Constants::PURCHASE_URL + offer_code
   end
   
@@ -70,24 +72,71 @@ module Devpay
   #
   # ===== Exceptions
   #
-  # Devpay::Errors::InvalidProductToken:: If the given or retrieved product token is not valid.
-  # Devpay::Errors::LicenseServiceError:: If an error occurs when contacting the Amazon License Service.
+  # Devpay::Errors::LicenseServiceError:: Generic error occurring within the License Service
   #
   def self.activate!(activation_key, product_token, access_key_id = @@access_key_id, secret_access_key = @@secret_access_key)
     product_token = product_token.product_token if product_token.respond_to?(:product_token)
-    raise(Errors::InvalidProductToken, "Invalid product token given: #{product_token.inspect}") unless valid_product_token?(product_token)
-    raise(Errors::InvalidActivationKey, "Invalid activation key given: #{activation_key.inspect}") unless valid_activation_key?(activation_key)
     
-    begin
-      license_service.activate_hosted_product(
-        activation_key,
-        product_token,
-        access_key_id,
-        secret_access_key
-      )
-    rescue RuntimeError => e
-      raise(Errors::LicenseServiceError, e.message, e.backtrace)
-    end
+    license_service.activate_hosted_product(
+      activation_key,
+      product_token,
+      access_key_id,
+      secret_access_key
+    )
+  end
+  
+  ##
+  # Returns an Array of active Product Codes (as Strings) for the given +pid+.
+  #
+  # The PID should be the Amazon-assigned persistent identifier for one of
+  # your customers.  This PID should have been returned to you (and 
+  # subsequently stored by you) following product activation.
+  #
+  # ===== Parameters
+  #
+  # pid:: Can either be a string or an object which responds to :persistent_identifier.  See activate!
+  # access_key_id:: (Optional) Your Amazon access key identifier.  Defaults to Devpay.access_key_id
+  # secret_access_key:: (Optional) Your Amazon secret access key.  Defaults to Devpay.secret_access_key
+  #
+  # ===== Exceptions
+  #
+  # Devpay::Errors::LicenseServiceError:: Generic error occurring within the License Service
+  #
+  def self.find_all_product_codes_for(pid, access_key_id = @@access_key_id, secret_access_key = @@secret_access_key)
+    pid = pid.persistent_identifier if pid.respond_to?(:persistent_identifier)
+    
+    license_service.get_active_subscriptions(
+      pid,
+      access_key_id,
+      secret_access_key
+    )
+  end
+
+  ##
+  # Returns +true+ if the subscription is active for the given 
+  # +pid+ for the given +product_code+.
+  #
+  # ===== Parameters
+  #
+  # pid:: Can either be a string or an object which responds to :persistent_identifier.  See activate!
+  # product_code:: Can either be a string or an object which responds to :product_code.  This is defined by DevPay during product registration.
+  # access_key_id:: (Optional) Your Amazon access key identifier.  Defaults to Devpay.access_key_id
+  # secret_access_key:: (Optional) Your Amazon secret access key.  Defaults to Devpay.secret_access_key
+  #
+  # ===== Exceptions
+  #
+  # Devpay::Errors::LicenseServiceError:: Generic error occurring within the License Service
+  #
+  def self.active?(pid, product_code, access_key_id = @@access_key_id, secret_access_key = @@secret_access_key)
+    pid           = pid.persistent_identifier if pid.respond_to?(:persistent_identifier)
+    product_code  = product_code.product_code if product_code.respond_to?(:product_code)
+    
+    license_service.verify_product_subscription(
+      pid,
+      product_code,
+      access_key_id,
+      secret_access_key
+    )
   end
   
   
@@ -95,38 +144,14 @@ module Devpay
   
   
   ##
-  # Returns +true+ if the given code is a valid Amazon offer code.
-  #
-  def self.valid_offer_code?(code)
-    code =~ Constants::OFFER_CODE_FORMAT
-  end
-  
-  ##
-  # Returns +true+ if the given token is a valid Amazon product token.
-  #
-  def self.valid_product_token?(token)
-    token =~ Constants::PRODUCT_TOKEN_FORMAT
-  end
-  
-  ##
-  # Returns +true+ if the given code is a valid Amazon product code.
-  #
-  def self.valid_product_code?(code)
-    code =~ Constants::PRODUCT_CODE_FORMAT
-  end
-  
-  ##
-  # Returns +true+ if the given key is a valid Amazon activation key.
-  #
-  def self.valid_activation_key?(key)
-    key =~ Constants::ACTIVATION_KEY_FORMAT
-  end
-  
-  ##
   # Returns a new instance of an Amazon License Service object.
   #
   def self.license_service
     DevPay::LicenseService.new
+  end
+  
+  def self.valid_offer_code?(code) #:nodoc:
+    code =~ Constants::OFFER_CODE_FORMAT
   end
   
 end

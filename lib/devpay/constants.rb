@@ -14,13 +14,11 @@ module Devpay
     # Character (byte) length of the Amazon offer code
     #
     OFFER_CODE_LENGTH     = 8
-    
-    
-    ACTIVATION_KEY_FORMAT = /\A[\w]+\Z/
+
+    ##
+    # Estimated formatting requirement for offer codes
+    #
     OFFER_CODE_FORMAT     = /\A[\w]{#{Constants::OFFER_CODE_LENGTH}}\Z/
-    PRODUCT_CODE_FORMAT   = /\A[\w]{#{Constants::PRODUCT_CODE_LENGTH}}\Z/
-    PRODUCT_TOKEN_FORMAT  = /\A\{ProductToken\}.+\Z/
-    USER_TOKEN_FORMAT     = /\A\{UserToken\}.+\Z/
     
     ##
     # The basic Amazon DevPay purchase url (without offeringCode)

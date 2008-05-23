@@ -38,7 +38,7 @@ class PurchaseUrlTest < Test::Unit::TestCase
       
       context "that doesn't respond to offer code" do
         should "raise InvalidOfferCode" do
-          assert_raise(Devpay::Errors::InvalidOfferCode) { Devpay.purchase_url_for(Hash) }
+          assert_raise(Devpay::Errors::LicenseService::InvalidOfferCode) { Devpay.purchase_url_for(Hash) }
         end
       end
       
@@ -52,7 +52,7 @@ class PurchaseUrlTest < Test::Unit::TestCase
       
       context "that is not valid" do
         should "raise InvalidOfferCode" do
-          assert_raise(Devpay::Errors::InvalidOfferCode) { Devpay.purchase_url_for("ab") }
+          assert_raise(Devpay::Errors::LicenseService::InvalidOfferCode) { Devpay.purchase_url_for("ab") }
         end
       end
       

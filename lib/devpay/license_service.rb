@@ -218,10 +218,6 @@ module Devpay
     # Wraps the License Service response errors by raising an actual Ruby
     # error to later catch.
     #
-    # This method dynamically generates Exception classes inheriting from
-    # Devpay::Errors::LicenseServiceError under the 
-    # Devpay::Errors::LicenseService module.
-    #
     def raise_error!(name, message)
       Errors::LicenseService.const_defined?(name.to_sym) ?
         raise(Errors::LicenseService.const_get(name.to_sym), message) :

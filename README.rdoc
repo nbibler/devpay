@@ -131,6 +131,18 @@ Further, we're also assuming that product is an object which responds to
 :product_code and returns a valid DevPay product code.  See
 Devpay.active? for more information.
 
+=== Notable, Miscellaneous Information
+
+==== Request Throttling
+
+The Amazon License Service (used for activating and verifying DevPay 
+subscriptions) may enter periods of request throttling.  During these periods
+the service will respond with HTTP 503 Service Unavailable.  Amazon's 
+documentation states that you should retry these requests, but fails to 
+stipulate a retry delay.  This implementation defaults the delay period to 
+a half-second. :)
+
+More information can be found in the documentation for Devpay::LicenseService.
 
 === Copyright and Attributions
 

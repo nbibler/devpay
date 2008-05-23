@@ -67,6 +67,8 @@ Otherwise, you can pass the offer code directly:
 
     <%= link_to 'Buy Now', Devpay.purchase_url_for('ABCD1234') %>
 
+See Devpay.purchase_url_for for more information.
+
 ==== Activation
 
 Once the user comes back to your site, you'll get an Activation Key and a 
@@ -87,6 +89,8 @@ In your DevPayResponseController, you could:
       })
     end
 
+See Devpay.activate! for more information
+
 ==== Query for Active Product Codes
 
 You could request a list of all active products which a customer is utilizing
@@ -96,6 +100,7 @@ by your DevPay services:
     
 In the above example, we're assuming paid_user responds with the correct 
 persistent identifier when :persistent_identifier is called against it.
+See Devpay.find_all_product_codes_for for more information.
 
 ==== Subscription State
 
@@ -110,7 +115,8 @@ be done with the following:
 In the above example, we're assuming paid_user responds with the correct 
 persistent identifier when :persistent_identifier is called against it.
 Further, we're also assuming that product is an object which responds to 
-:product_code and returns a valid DevPay product code.
+:product_code and returns a valid DevPay product code.  See
+Devpay.active? for more information.
 
 
 === Copyright and Attributions

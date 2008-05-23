@@ -112,4 +112,12 @@ persistent identifier when :persistent_identifier is called against it.
 Further, we're also assuming that product is an object which responds to 
 :product_code and returns a valid DevPay product code.
 
-Copyright (c) 2008 Nathaniel E. Bibler, released under the MIT license
+
+=== Copyright and Attributions
+
+Copyright (c) 2008 {Nathaniel E. Bibler}[http://www.nathanielbibler.com], 
+released under the MIT license.
+
+Thanks to david@aws and Amazon:http://www.amazon.com for providing 
+{basic Ruby samples}[http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1100]
+for interaction with the Amazon License Service.

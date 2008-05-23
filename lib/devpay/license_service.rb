@@ -71,13 +71,17 @@ module Devpay
     # Defaults to RETRIES_FOR_503
     attr_accessor :retries_for_503
     
+    # Defaults to RETRY_DELAY
+    attr_accessor :retry_delay
+    
     def initialize(options = {}) #:nodoc:
       @host       = options[:host]    || HOST
       @port       = options[:port]    || PORT
       @version    = options[:version] || VERSION
       @timeout    = options[:timeout] || TIMEOUT
-      
-      @retries_for_503 = options[:retries_for_503] || RETRIES_FOR_503
+
+      @retry_delay      = options[:retry_delay]     || RETRY_DELAY
+      @retries_for_503  = options[:retries_for_503] || RETRIES_FOR_503
     end
     
     ##
@@ -214,7 +218,7 @@ module Devpay
         response        = http.get2(query_string)
         if response.kind_of?(Net::HTTPServiceUnavailable) && retry_count < @retries_for_503
           retry_count += 1
-          sleep RETRY_DELAY
+          sleep @retry_delay
           raise(Errors::LicenseService::ServiceUnavailable)
         end
       rescue Timeout::Error => e

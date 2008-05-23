@@ -80,7 +80,7 @@ In your DevPayResponseController, you could:
 
     # This URL was set in your DevPay product as the return URL (i.e. http://www.example.com/devpay_response/returned)
     def returned
-      activation_response       = Devpay.activate!(params[:activation_key], params[:product_code])
+      activation_response       = Devpay.activate!(params['ActivationKey'], params['ProductCode'])
       PaidUser.create!({
         ...
         :user_token             => activation_response.user_token,

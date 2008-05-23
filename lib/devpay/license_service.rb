@@ -105,7 +105,8 @@ module Devpay
     end
 
     ##
-    # Returns an Array of product codes which are active for the given +pid+.
+    # Returns an Array of product codes (as Strings) which are active for the 
+    # given +pid+.
     #
     # ===== Exceptions
     #

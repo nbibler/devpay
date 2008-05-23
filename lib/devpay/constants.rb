@@ -6,11 +6,6 @@ module Devpay
   module Constants
     
     ##
-    # Character (byte) length of the Amazon product code
-    #
-    PRODUCT_CODE_LENGTH   = 8
-    
-    ##
     # Character (byte) length of the Amazon offer code
     #
     OFFER_CODE_LENGTH     = 8

@@ -121,7 +121,12 @@ module Devpay
     end
     
     ##
+    # Returns +true+ if the given +pid+ is an active subscription for the 
+    # given +product_code+.  Otherwise, returns +false+.
     #
+    # ===== Exceptions
+    #
+    # Devpay::Errors::LicenseServiceError:: General error form, more specific errors will be raised that inherit from it
     #
     def verify_product_subscription(pid, product_code, access_key_id, secret_access_key)
       arguments = {

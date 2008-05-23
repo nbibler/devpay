@@ -57,6 +57,19 @@ called AWS_CREDS, and you've stored your product identifiers into an
 ActiveRecord 'Product' model as product_code, product_token, and offer_code, 
 respectively.
 
+==== Setting Your Credentials
+
+You can globally set your credentials, like so:
+
+    Devpay.access_key_id      = AWS_CREDS[:access_key_id]
+    Devpay.secret_access_key  = AWS_CREDS[:secret_access_key]
+
+Or, you can pass your credentials as optional parameters to each Devpay
+method call you make:
+
+    Devpay.active?(pid, product_code, AWS_CREDS[:access_key_id], AWS_CREDS[:secret_access_key])
+
+
 ==== Product URLs
 
 If you've got an object which responds to :offer_code, you can:

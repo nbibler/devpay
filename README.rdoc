@@ -92,13 +92,17 @@ In your DevPayResponseController, you could:
 
     # This URL was set in your DevPay product as the return URL (i.e. http://www.example.com/devpay_response/returned)
     def returned
-      activation_response       = Devpay.activate!(params['ActivationKey'], params['ProductCode'])
-      PaidUser.create!({
-        ...
-        :user_token             => activation_response.user_token,
-        :persistent_identifier  => activation_response.persistent_identifier,
-        ...
-      })
+      if product                  = Product.find_by_product_code(params['ProduceCode'])
+        activation_response       = Devpay.activate!(params['ActivationKey'], product)
+        PaidUser.create!({
+          ...
+          :user_token             => activation_response.user_token,
+          :persistent_identifier  => activation_response.persistent_identifier,
+          ...
+        })
+      else
+        # Handle unrecognized Product Code here.
+      end
     end
 
 See Devpay.activate! for more information

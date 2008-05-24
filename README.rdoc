@@ -14,13 +14,12 @@ management system.  It allows developers to nearly ignore the process
 altogether.  The pieces which are of concern, however, are as follows:
 
 1. Customer signs up for your product using a link you provide (see Devpay.purchase_url_for),
-2. The customer goes about signing up for Amazon services, on Amazon's websites,
-3. The customer successfully signs up for your product and is redirected to a URL you'd previously provided during product registration,
-4. The redirection contains an activation key and product code which must be activated (see Devpay.activate!),
-5. Following activation, you'll receive a User Token (which must be stored) and Persistent Identifier,
-6. The customer happily uses your hosted DevPay product,
-7. ...
-8. <b>Profit!</b>
+2. The customer successfully signs up for your product and is redirected to a URL you'd previously provided during product registration,
+3. The redirection contains an activation key and product code which must be activated (see Devpay.activate!),
+4. Following activation, you'll receive a User Token and Persistent Identifier (both of which should be stored),
+5. The customer happily uses your hosted DevPay product,
+6. ... you can periodically check the customer's subscription status (see Devpay.active?) ...
+7. <b>Profit!</b>
 
 === Things You'll Need
 

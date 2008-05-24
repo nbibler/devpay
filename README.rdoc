@@ -136,6 +136,19 @@ Devpay.active? for more information.
 
 === Notable, Miscellaneous Information
 
+==== Raised Exceptions
+
+All exceptions raised by this plugin inherit from Devpay::Error (a type of
+Exception).  So, in general, a
+
+    rescue Devpay::Error => e
+      puts "Devpay had a problem: #{e.class} '#{e.message}'"
+
+Should catch any and all problems raised through the use of this plugin.  
+More specific errors are nearly always raised, however.  Nearly a hundred 
+more specific errors are not publicly documented, but can be found in 
+lib/errors/errors.rb and lib/errors/license_service/errors.rb.
+
 ==== Request Throttling
 
 The Amazon License Service (used for activating and verifying DevPay 

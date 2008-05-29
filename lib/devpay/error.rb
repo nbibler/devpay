@@ -13,6 +13,6 @@ module Devpay
   #     .. do something generally useful that tripped something other than SpecificError ..
   #   end
   #
-  class Error < Exception; end
+  class Error < RuntimeError; end
   
 end

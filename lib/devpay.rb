@@ -3,6 +3,7 @@ require 'devpay/errors/errors'
 require 'devpay/errors/license_service/errors'
 require 'devpay/constants'
 require 'devpay/license_service'
+require 'devpay/helpers/graceful_requestor'
 
 ##
 # Manages interactions with the Amazon DevPay system.

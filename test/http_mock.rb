@@ -1,6 +1,11 @@
 require 'net/http'
 require 'net/https'
 
+##
+# Thanks to {Mike Mondragon}[http://www.mondragon.cc/] for providing the 
+# following snippet.
+#
+
 # patch Net::HTTP so un caged requests don't go over the wire
 module Net #:nodoc:
   class HTTP #:nodoc:

@@ -229,7 +229,7 @@ module Devpay
         end
       rescue Timeout::Error => e
         raise(Errors::LicenseService::TimeoutError, e.message, e.backtrace)
-      rescue Errors::LicenseService::ServiceUnavailable => e
+      rescue Errors::LicenseService::ServiceUnavailable
         retry
       end
       

@@ -57,7 +57,18 @@ class GracefulRequestorTest < Test::Unit::TestCase
           
         end
         
-        
+        context "with custom messages" do
+          
+          setup do
+            @requestor.stubs(:custom_message_for).returns("Custom error message")
+          end
+          
+          should "return the custom message" do
+            assert_equal "Custom error message", @requestor.activate!(TEST_ACTIVATION_KEY, TEST_PRODUCT_TOKEN).message
+          end
+          
+        end
+
       end
       
     end

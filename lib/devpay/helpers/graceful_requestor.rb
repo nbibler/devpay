@@ -52,8 +52,38 @@ module Devpay #:nodoc:
               Devpay::Errors::LicenseService::UserNotSubscribed
         ActivationResponse.new({
           :code     => $!.class.to_s,
-          :message  => $!.message
+          :message  => custom_message_for($!) || $!.message
         })
+      end
+      
+      
+      private
+      
+      
+      ##
+      # Inherit this class into a custom requestor class and override this 
+      # method to return custom error messages for error codes.
+      #
+      # ===== Example
+      #
+      # Below is an example of how to add custom error messages to your 
+      # application through the response messages:
+      #
+      #     def self.custom_devpay_message_for(error)
+      #       case error
+      #       when Devpay::Errors::LicenseService::ExpiredActivationKey
+      #         %w(
+      #         The activation key you've provided has expired.  Please go
+      #         to your Amazon activation page and generate a new activation
+      #         key.
+      #         )
+      #       else
+      #         nil  # Uses the Amazon error message.
+      #       end
+      #     end
+      #
+      def self.custom_message_for(error)
+        nil
       end
       
     end

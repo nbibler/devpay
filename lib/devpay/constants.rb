@@ -6,6 +6,12 @@ module Devpay
   module Constants
     
     ##
+    # REST header and query string parameter name required for calls to DevPay
+    # on behalf of the consumer.  The value should be the activated UserToken.
+    #
+    SECURITY_KEY          = 'x-amz-security-token'
+    
+    ##
     # Character (byte) length of the Amazon offer code
     #
     OFFER_CODE_LENGTH     = 8

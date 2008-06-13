@@ -9,6 +9,7 @@ require 'devpay/helpers/graceful_requestor'
 # Manages interactions with the Amazon DevPay system.
 #
 module Devpay
+  include Constants
   
   # Amazon Access Key ID
   mattr_accessor :access_key_id
@@ -40,7 +41,7 @@ module Devpay
   def self.purchase_url_for(offer_code)
     offer_code = offer_code.offer_code if offer_code.respond_to?(:offer_code)
     raise(Errors::LicenseService::InvalidOfferCode, "Invalid offer code given: #{offer_code.inspect}") unless valid_offer_code?(offer_code)
-    Constants::PURCHASE_URL + offer_code
+    PURCHASE_URL + offer_code
   end
   
   ##
@@ -152,7 +153,7 @@ module Devpay
   end
   
   def self.valid_offer_code?(code) #:nodoc:
-    code =~ Constants::OFFER_CODE_FORMAT
+    code =~ OFFER_CODE_FORMAT
   end
   
 end

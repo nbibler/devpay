@@ -19,7 +19,7 @@ module Devpay
     ##
     # Estimated formatting requirement for offer codes
     #
-    OFFER_CODE_FORMAT     = /\A[\w]{#{Constants::OFFER_CODE_LENGTH}}\Z/
+    OFFER_CODE_FORMAT     = /\A[\w]{#{OFFER_CODE_LENGTH}}\Z/
     
     ##
     # The basic Amazon DevPay purchase url (without offeringCode)
